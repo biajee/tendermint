@@ -173,7 +173,7 @@ func makeBlockIDRandom() BlockID {
 	return BlockID{blockHash, blockPartsHeader}
 }
 
-func makeBlockID(hash []byte, partSetSize int, partSetHash []byte) BlockID {
+func makeBlockID(hash []byte, partSetSize uint32, partSetHash []byte) BlockID {
 	return BlockID{
 		Hash: hash,
 		PartsHeader: PartSetHeader{
@@ -261,7 +261,7 @@ func TestMaxHeaderBytes(t *testing.T) {
 		Time:               timestamp,
 		NumTxs:             math.MaxInt64,
 		TotalTxs:           math.MaxInt64,
-		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt64, make([]byte, tmhash.Size)),
+		LastBlockID:        makeBlockID(make([]byte, tmhash.Size), math.MaxInt32, make([]byte, tmhash.Size)),
 		LastCommitHash:     tmhash.Sum([]byte("last_commit_hash")),
 		DataHash:           tmhash.Sum([]byte("data_hash")),
 		ValidatorsHash:     tmhash.Sum([]byte("validators_hash")),
@@ -492,7 +492,7 @@ func TestBlockIDValidateBasic(t *testing.T) {
 	invalidBlockID := BlockID{
 		Hash: []byte{0},
 		PartsHeader: PartSetHeader{
-			Total: -1,
+			Total: 1,
 			Hash:  cmn.HexBytes{},
 		},
 	}

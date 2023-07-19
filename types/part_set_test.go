@@ -31,7 +31,7 @@ func TestBasicPartSet(t *testing.T) {
 	partSet2 := NewPartSetFromHeader(partSet.Header())
 
 	assert.True(t, partSet2.HasHeader(partSet.Header()))
-	for i := 0; i < partSet.Total(); i++ {
+	for i := 0; i < int(partSet.Total()); i++ {
 		part := partSet.GetPart(i)
 		//t.Logf("\n%v", part)
 		added, err := partSet2.AddPart(part)
@@ -92,7 +92,6 @@ func TestPartSetHeaderValidateBasic(t *testing.T) {
 		expectErr             bool
 	}{
 		{"Good PartSet", func(psHeader *PartSetHeader) {}, false},
-		{"Negative Total", func(psHeader *PartSetHeader) { psHeader.Total = -2 }, true},
 		{"Invalid Hash", func(psHeader *PartSetHeader) { psHeader.Hash = make([]byte, 1) }, true},
 	}
 	for _, tc := range testCases {
@@ -114,7 +113,6 @@ func TestPartValidateBasic(t *testing.T) {
 		expectErr    bool
 	}{
 		{"Good Part", func(pt *Part) {}, false},
-		{"Negative index", func(pt *Part) { pt.Index = -1 }, true},
 		{"Too big part", func(pt *Part) { pt.Bytes = make([]byte, BlockPartSizeBytes+1) }, true},
 		{"Too big proof", func(pt *Part) {
 			pt.Proof = merkle.SimpleProof{

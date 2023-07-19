@@ -688,7 +688,7 @@ func TestNewValidBlockMessageValidateBasic(t *testing.T) {
 			"Empty BlockParts",
 		},
 		{
-			func(msg *NewValidBlockMessage) { msg.BlockParts = cmn.NewBitArray(types.MaxBlockPartsCount + 1) },
+			func(msg *NewValidBlockMessage) { msg.BlockParts = cmn.NewBitArray(int(types.MaxBlockPartsCount + 1)) },
 			"BlockParts bit array size 1602 not equal to BlockPartsHeader.Total 1",
 		},
 	}
@@ -774,7 +774,7 @@ func TestBlockPartMessageValidateBasic(t *testing.T) {
 	}
 
 	message := BlockPartMessage{Height: 0, Round: 0, Part: new(types.Part)}
-	message.Part.Index = -1
+	message.Part.Index = 1
 
 	assert.Equal(t, true, message.ValidateBasic() != nil, "Validate Basic had an unexpected result")
 }
@@ -825,7 +825,7 @@ func TestVoteSetMaj23MessageValidateBasic(t *testing.T) {
 	invalidBlockID := types.BlockID{
 		Hash: cmn.HexBytes{},
 		PartsHeader: types.PartSetHeader{
-			Total: -1,
+			Total: 1,
 			Hash:  cmn.HexBytes{},
 		},
 	}
@@ -873,7 +873,7 @@ func TestVoteSetBitsMessageValidateBasic(t *testing.T) {
 			msg.BlockID = types.BlockID{
 				Hash: cmn.HexBytes{},
 				PartsHeader: types.PartSetHeader{
-					Total: -1,
+					Total: 1,
 					Hash:  cmn.HexBytes{},
 				},
 			}

@@ -293,7 +293,7 @@ func (conR *ConsensusReactor) Receive(chID byte, src p2p.Peer, msgBytes []byte) 
 		case *ProposalPOLMessage:
 			ps.ApplyProposalPOLMessage(msg)
 		case *BlockPartMessage:
-			ps.SetHasProposalBlockPart(msg.Height, msg.Round, msg.Part.Index)
+			ps.SetHasProposalBlockPart(msg.Height, msg.Round, int(msg.Part.Index))
 			conR.metrics.BlockParts.With("peer_id", string(src.ID())).Add(1)
 			conR.conS.peerMsgQueue <- msgInfo{msg, src.ID()}
 		default:
@@ -990,7 +990,7 @@ func (ps *PeerState) SetHasProposal(proposal *types.Proposal) {
 	}
 
 	ps.PRS.ProposalBlockPartsHeader = proposal.BlockID.PartsHeader
-	ps.PRS.ProposalBlockParts = cmn.NewBitArray(proposal.BlockID.PartsHeader.Total)
+	ps.PRS.ProposalBlockParts = cmn.NewBitArray(int(proposal.BlockID.PartsHeader.Total))
 	ps.PRS.ProposalPOLRound = proposal.POLRound
 	ps.PRS.ProposalPOL = nil // Nil until ProposalPOLMessage received.
 }
@@ -1005,7 +1005,7 @@ func (ps *PeerState) InitProposalBlockParts(partsHeader types.PartSetHeader) {
 	}
 
 	ps.PRS.ProposalBlockPartsHeader = partsHeader
-	ps.PRS.ProposalBlockParts = cmn.NewBitArray(partsHeader.Total)
+	ps.PRS.ProposalBlockParts = cmn.NewBitArray(int(partsHeader.Total))
 }
 
 // SetHasProposalBlockPart sets the given block part index as known for the peer.
@@ -1432,7 +1432,7 @@ func (m *NewRoundStepMessage) String() string {
 //-------------------------------------
 
 // NewValidBlockMessage is sent when a validator observes a valid block B in some round r,
-//i.e., there is a Proposal for block B and 2/3+ prevotes for the block B in the round r.
+// i.e., there is a Proposal for block B and 2/3+ prevotes for the block B in the round r.
 // In case the block is also committed, then IsCommit flag is set to true.
 type NewValidBlockMessage struct {
 	Height           int64
@@ -1456,12 +1456,12 @@ func (m *NewValidBlockMessage) ValidateBasic() error {
 	if m.BlockParts.Size() == 0 {
 		return errors.New("Empty BlockParts")
 	}
-	if m.BlockParts.Size() != m.BlockPartsHeader.Total {
+	if m.BlockParts.Size() != int(m.BlockPartsHeader.Total) {
 		return fmt.Errorf("BlockParts bit array size %d not equal to BlockPartsHeader.Total %d",
 			m.BlockParts.Size(),
 			m.BlockPartsHeader.Total)
 	}
-	if m.BlockParts.Size() > types.MaxBlockPartsCount {
+	if m.BlockParts.Size() > int(types.MaxBlockPartsCount) {
 		return errors.Errorf("BlockParts bit array is too big: %d, max: %d", m.BlockParts.Size(), types.MaxBlockPartsCount)
 	}
 	return nil
