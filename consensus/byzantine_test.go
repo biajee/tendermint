@@ -212,7 +212,7 @@ func sendProposalAndParts(height int64, round int, cs *ConsensusState, peer p2p.
 	peer.Send(DataChannel, cdc.MustMarshalBinaryBare(msg))
 
 	// parts
-	for i := 0; i < parts.Total(); i++ {
+	for i := 0; i < int(parts.Total()); i++ {
 		part := parts.GetPart(i)
 		msg := &BlockPartMessage{
 			Height: height, // This tells peer that this part applies to us.
