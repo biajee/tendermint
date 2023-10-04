@@ -8,7 +8,7 @@ import (
 	"io"
 	"math/big"
 
-	secp256k1 "github.com/btcsuite/btcd/btcec"
+	secp256k1 "github.com/btcsuite/btcd/btcec/v2"
 	ethCrypto "github.com/ethereum/go-ethereum/crypto"
 
 	amino "github.com/tendermint/go-amino"
@@ -16,7 +16,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 )
 
-//-------------------------------------
+// -------------------------------------
 const (
 	PrivKeyAminoName = "tendermint/PrivKeySecp256k1"
 	PubKeyAminoName  = "tendermint/PubKeySecp256k1"
