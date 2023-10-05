@@ -551,8 +551,8 @@ func DefaultP2PConfig() *P2PConfig {
 		UPNP:                    false,
 		AddrBook:                defaultAddrBookPath,
 		AddrBookStrict:          true,
-		MaxNumInboundPeers:      40,
-		MaxNumOutboundPeers:     10,
+		MaxNumInboundPeers:      100,
+		MaxNumOutboundPeers:     100,
 		FlushThrottleTimeout:    100 * time.Millisecond,
 		MaxPacketMsgPayloadSize: 1024,    // 1 kB
 		SendRate:                5120000, // 5 mB/s
