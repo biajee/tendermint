@@ -205,11 +205,12 @@ type Handshaker struct {
 	genDoc       *types.GenesisDoc
 	logger       log.Logger
 
-	nBlocks int // number of blocks applied to the state
+	withAppStat bool
+	nBlocks     int // number of blocks applied to the state
 }
 
 func NewHandshaker(stateDB dbm.DB, state sm.State,
-	store sm.BlockStore, genDoc *types.GenesisDoc) *Handshaker {
+	store sm.BlockStore, genDoc *types.GenesisDoc, withAppStat bool) *Handshaker {
 
 	return &Handshaker{
 		stateDB:      stateDB,
@@ -219,6 +220,7 @@ func NewHandshaker(stateDB dbm.DB, state sm.State,
 		genDoc:       genDoc,
 		logger:       log.NewNopLogger(),
 		nBlocks:      0,
+		withAppStat:  withAppStat,
 	}
 }
 
@@ -337,7 +339,7 @@ func (h *Handshaker) ReplayBlocks(
 	// First handle edge cases and constraints on the storeBlockHeight.
 	switch {
 	case storeBlockHeight == 0:
-		assertAppHashEqualsOneFromState(appHash, state)
+		assertAppHashEqualsOneFromState(appHash, state, !h.withAppStat)
 		return appHash, nil
 
 	case storeBlockHeight < appBlockHeight:
@@ -365,7 +367,7 @@ func (h *Handshaker) ReplayBlocks(
 
 		} else if appBlockHeight == storeBlockHeight {
 			// We're good!
-			assertAppHashEqualsOneFromState(appHash, state)
+			assertAppHashEqualsOneFromState(appHash, state, !h.withAppStat)
 			return appHash, nil
 		}
 
@@ -426,7 +428,7 @@ func (h *Handshaker) replayBlocks(state sm.State, proxyApp proxy.AppConns, appBl
 		h.logger.Info("Applying block", "height", i)
 		block := h.store.LoadBlock(i)
 		// Extra check to ensure the app was not changed in a way it shouldn't have.
-		if len(appHash) > 0 {
+		if len(appHash) > 0 && h.withAppStat {
 			assertAppHashEqualsOneFromBlock(appHash, block)
 		}
 
@@ -447,7 +449,7 @@ func (h *Handshaker) replayBlocks(state sm.State, proxyApp proxy.AppConns, appBl
 		appHash = state.AppHash
 	}
 
-	assertAppHashEqualsOneFromState(appHash, state)
+	assertAppHashEqualsOneFromState(appHash, state, !h.withAppStat)
 	return appHash, nil
 }
 
@@ -456,7 +458,7 @@ func (h *Handshaker) replayBlock(state sm.State, height int64, proxyApp proxy.Ap
 	block := h.store.LoadBlock(height)
 	meta := h.store.LoadBlockMeta(height)
 
-	blockExec := sm.NewBlockExecutor(h.stateDB, h.logger, proxyApp, mock.Mempool{}, sm.MockEvidencePool{})
+	blockExec := sm.NewBlockExecutor(h.stateDB, h.logger, proxyApp, mock.Mempool{}, sm.MockEvidencePool{}, h.withAppStat)
 	blockExec.SetEventBus(h.eventBus)
 
 	var err error
@@ -480,7 +482,10 @@ Block: %v
 	}
 }
 
-func assertAppHashEqualsOneFromState(appHash []byte, state sm.State) {
+func assertAppHashEqualsOneFromState(appHash []byte, state sm.State, skip bool) {
+	if skip {
+		return
+	}
 	if !bytes.Equal(appHash, state.AppHash) {
 		panic(fmt.Sprintf(`state.AppHash does not match AppHash after replay. Got
 %X, expected %X.

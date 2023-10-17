@@ -41,6 +41,9 @@ type BlockExecutor struct {
 
 	// [peppermint] fast sync
 	fastSyncFunc func() bool
+
+	// whether to check appHash
+	withAppState bool
 }
 
 type BlockExecutorOption func(executor *BlockExecutor)
@@ -53,15 +56,16 @@ func BlockExecutorWithMetrics(metrics *Metrics) BlockExecutorOption {
 
 // NewBlockExecutor returns a new BlockExecutor with a NopEventBus.
 // Call SetEventBus to provide one.
-func NewBlockExecutor(db dbm.DB, logger log.Logger, proxyApp proxy.AppConnConsensus, mempool mempl.Mempool, evpool EvidencePool, options ...BlockExecutorOption) *BlockExecutor {
+func NewBlockExecutor(db dbm.DB, logger log.Logger, proxyApp proxy.AppConnConsensus, mempool mempl.Mempool, evpool EvidencePool, withAppState bool, options ...BlockExecutorOption) *BlockExecutor {
 	res := &BlockExecutor{
-		db:       db,
-		proxyApp: proxyApp,
-		eventBus: types.NopEventBus{},
-		mempool:  mempool,
-		evpool:   evpool,
-		logger:   logger,
-		metrics:  NopMetrics(),
+		db:           db,
+		proxyApp:     proxyApp,
+		eventBus:     types.NopEventBus{},
+		mempool:      mempool,
+		evpool:       evpool,
+		logger:       logger,
+		metrics:      NopMetrics(),
+		withAppState: withAppState,
 	}
 
 	for _, option := range options {
@@ -115,7 +119,7 @@ func (blockExec *BlockExecutor) CreateProposalBlock(
 // Validation does not mutate state, but does require historical information from the stateDB,
 // ie. to verify evidence from a validator at an old height.
 func (blockExec *BlockExecutor) ValidateBlock(state State, block *types.Block) error {
-	return validateBlock(blockExec.evpool, blockExec.db, state, block)
+	return validateBlock(blockExec.evpool, blockExec.db, state, block, blockExec.withAppState)
 }
 
 // ApplyBlock validates the block against the state, executes it against the app,
